@@ -1,0 +1,29 @@
+services:
+  auth-service:
+    build:
+      context: ./auth-service
+    container_name: auth-service
+    environment:
+      - SERVER_PORT=8089   # change/remove if not Spring Boot
+    ports:
+      - "8089:8089"        # optional; not required for in-network calls
+    healthcheck:
+      test: ["CMD", "sh", "-c", "wget -qO- http://localhost:8089/actuator/health || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+
+  automation-tests:
+    build:
+      context: ./MyAutomation
+    depends_on:
+      auth-service:
+        condition: service_healthy
+    environment:
+      - env=ci
+      - username=${USERNAME}
+      - password=${PASSWORD}
+      # IMPORTANT: use service name, not localhost
+      - authBaseUrl=http://auth-service:8089
+      # example if you also dockerize the resource service:
+      # - resourceBaseUrl=http://resource-service:8088/api/v1
