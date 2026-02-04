@@ -3,14 +3,11 @@ FROM maven:3.9-eclipse-temurin-17 AS build
 WORKDIR /app
 COPY pom.xml .
 COPY src ./src
-RUN mvn -B -DskipTests package
+RUN mvn -q -DskipTests clean package
 
-# ---- runtime stage ----
+# ---- run stage ----
 FROM eclipse-temurin:17-jre
 WORKDIR /app
 COPY --from=build /app/target/*.jar app.jar
-
-# Change if your service listens on a different port
-EXPOSE 8089
-
+EXPOSE 8080
 ENTRYPOINT ["java","-jar","/app/app.jar"]
